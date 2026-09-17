@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    pom.xml — API de comptes bancaires (projet pédagogique).
+
+    Ce fichier est abondamment commenté : chaque dépendance et chaque plugin
+    est expliqué pour qu'un lecteur découvrant Spring Boot / Java 17
+    comprenne à quoi il sert.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+        On hérite du parent Spring Boot : il fournit la gestion centralisée
+        des versions (BOM) pour toutes les dépendances Spring et la plupart
+        des bibliothèques tierces courantes, ainsi que la configuration par
+        défaut des plugins Maven (compilateur, tests, packaging exécutable).
+    -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.0</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.hashtag.ngo.example</groupId>
+    <artifactId>bank-account-api</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <name>API de comptes bancaires</name>
+    <description>
+        Projet pédagogique Spring Boot 4.1 / Java 17 : API REST de gestion de
+        comptes bancaires (comptes courants et comptes épargne), sécurisée
+        par JWT, documentée avec Swagger et testée avec Cucumber + ArchUnit.
+    </description>
+
+    <properties>
+        <!--
+            On cible explicitement Java 17 (LTS) : le projet n'utilise QUE
+            des fonctionnalités stables de Java 17 (records, classes
+            scellées, text blocks, switch expressions, instanceof avec
+            pattern matching). Le "pattern matching pour switch" (Java 21)
+            est volontairement exclu.
+        -->
+        <maven.compiler.release>17</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Versions des bibliothèques non gérées par le BOM Spring Boot -->
+        <mapstruct.version>1.6.3</mapstruct.version>
+        <jjwt.version>0.12.6</jjwt.version>
+        <cucumber.version>7.20.1</cucumber.version>
+        <archunit.version>1.3.0</archunit.version>
+        <!-- springdoc 3.x est la ligne compatible Spring Boot 4 / Spring Framework 7 -->
+        <springdoc.version>3.0.0</springdoc.version>
+    </properties>
+
+    <dependencies>
+        <!-- Construction de l'API REST (contrôleurs, Jackson, serveur Tomcat embarqué) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Spring Security : authentification/autorisation, filtres de sécurité -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+        <!-- Spring Data JPA : repositories, Hibernate comme fournisseur JPA -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!--
+            Base de données H2 en mémoire : aucune installation externe
+            nécessaire, les données sont réinitialisées à chaque démarrage.
+            Scope "runtime" car le code de l'application ne dépend jamais
+            directement des classes du pilote H2.
+        -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!--
+            Génération automatique de la documentation OpenAPI (spec JSON)
+            et de l'interface Swagger UI à partir des annotations des
+            contrôleurs.
+        -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc.version}</version>
+        </dependency>
+
+        <!-- MapStruct : génère à la compilation le code de mapping entité <-> DTO -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <version>${mapstruct.version}</version>
+        </dependency>
+
+        <!--
+            JJWT : création et validation de jetons JWT (JSON Web Token).
+            - jjwt-api    : les interfaces publiques utilisées dans notre code
+            - jjwt-impl   : l'implémentation (scope runtime, jamais utilisée directement)
+            - jjwt-jackson : (de)sérialisation JSON des claims via Jackson (scope runtime)
+        -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>${jjwt.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!--
+            Socle de test Spring Boot : JUnit 5 (Jupiter), Mockito,
+            AssertJ, spring-test (MockMvc, TestRestTemplate, etc.)
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!--
+            Cucumber : tests d'acceptation écrits en langage naturel (BDD).
+            - cucumber-java                    : annotations @Given/@When/@Then en Java
+            - cucumber-spring                  : injecte le contexte Spring dans les steps
+            - cucumber-junit-platform-engine    : permet à Cucumber de s'exécuter comme
+                                                   un moteur de test JUnit Platform (donc
+                                                   détecté automatiquement par Maven Surefire)
+        -->
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-java</artifactId>
+            <version>${cucumber.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-spring</artifactId>
+            <version>${cucumber.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-junit-platform-engine</artifactId>
+            <version>${cucumber.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!--
+            Nécessaire pour définir une classe "@Suite" qui indique à Maven
+            Surefire où trouver les fichiers .feature et quel moteur utiliser.
+        -->
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-suite</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!--
+            ArchUnit : vérifie par le code les règles d'architecture
+            (dépendances entre couches, conventions de nommage).
+        -->
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
+            <version>${archunit.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!--
+                Le plugin Spring Boot : construit un jar exécutable
+                ("fat jar") contenant toutes les dépendances, et fournit le
+                goal "spring-boot:run" pour lancer l'application en
+                développement.
+            -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+            <!--
+                Le plugin compilateur doit connaître MapStruct : c'est un
+                "annotation processor" qui génère, à la compilation, les
+                classes d'implémentation des interfaces @Mapper
+                (ex. AccountMapperImpl). On le déclare explicitement dans
+                annotationProcessorPaths pour éviter tout conflit avec
+                d'autres processeurs d'annotations (ex. Lombok, absent ici).
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.mapstruct</groupId>
+                            <artifactId>mapstruct-processor</artifactId>
+                            <version>${mapstruct.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+
+            <!--
+                Maven Surefire exécute les tests lors de "mvn test". Depuis
+                la version 3.x, il détecte automatiquement tous les moteurs
+                JUnit Platform présents sur le classpath (JUnit Jupiter,
+                Cucumber via cucumber-junit-platform-engine, et la classe de
+                suite ArchUnit) : aucune configuration supplémentaire n'est
+                nécessaire.
+            -->
+        </plugins>
+    </build>
+
+</project>

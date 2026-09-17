@@ -1,0 +1,50 @@
+# Configuration de l'application "API de comptes bancaires".
+# Toutes les valeurs ci-dessous sont des valeurs de démonstration.
+
+server:
+  port: 8080
+
+spring:
+  application:
+    name: bank-account-api
+
+  # Base de données H2 en mémoire : recréée à chaque démarrage, aucune
+  # installation externe n'est nécessaire. "DB_CLOSE_DELAY=-1" évite que la
+  # base ne soit détruite tant que la JVM tourne (utile car H2 la fermerait
+  # sinon dès que la première connexion se referme).
+  datasource:
+    url: jdbc:h2:mem:bankdb;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    # "update" convient à un projet de démonstration : Hibernate crée/adapte
+    # le schéma à partir des entités JPA. Dans une vraie application, on
+    # préférerait des migrations versionnées (Flyway/Liquibase).
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+
+springdoc:
+  swagger-ui:
+    # Accessible sur http://localhost:8080/swagger-ui.html
+    path: /swagger-ui.html
+
+# Configuration applicative propre à ce projet (préfixe "app" pour éviter
+# toute collision avec les propriétés standard de Spring Boot).
+app:
+  jwt:
+    # ATTENTION : secret de démonstration UNIQUEMENT, codé en clair ici pour
+    # simplifier la prise en main du projet. En production, ce secret doit
+    # être généré aléatoirement, stocké dans un gestionnaire de secrets
+    # (variable d'environnement, Vault, AWS Secrets Manager...) et JAMAIS
+    # committé dans le dépôt de code source.
+    secret: "ceci-est-un-secret-de-demonstration-a-ne-jamais-utiliser-en-production"
+    # Durée de validité d'un jeton, en millisecondes (ici 1 heure).
+    expiration-ms: 3600000
+
+logging:
+  level:
+    com.hashtag.ngo.example.bank: INFO
