@@ -1,5 +1,6 @@
-package com.hashtag.ngo.example.bank.bean;
+package com.hashtag.ngo.example.bank.bean.impl;
 
+import com.hashtag.ngo.example.bank.bean.JwtService;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;

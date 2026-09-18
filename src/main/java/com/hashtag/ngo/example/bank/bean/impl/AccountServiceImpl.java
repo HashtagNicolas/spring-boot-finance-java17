@@ -1,5 +1,6 @@
-package com.hashtag.ngo.example.bank.bean;
+package com.hashtag.ngo.example.bank.bean.impl;
 
+import com.hashtag.ngo.example.bank.bean.AccountService;
 import com.hashtag.ngo.example.bank.entity.Account;
 import com.hashtag.ngo.example.bank.entity.AccountNotFoundException;
 import com.hashtag.ngo.example.bank.entity.AccountRepository;

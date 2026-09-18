@@ -7,6 +7,7 @@ import com.tngtech.archunit.lang.ArchRule;
 import org.springframework.web.bind.annotation.RestController;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 
 /**
@@ -61,4 +62,17 @@ public class ArchitectureTest {
                     // "switch" sur une enum) : ce ne sont pas des classes du code source.
                     .and().haveNameNotMatching(".*\\$\\d+$")
                     .should().haveSimpleNameEndingWith("ServiceImpl");
+
+    @ArchTest
+    static final ArchRule les_implementations_vivent_dans_un_package_impl =
+            classes().that().haveSimpleNameEndingWith("Impl")
+                    // Les *MapperImpl sont générés par MapStruct à côté de l'interface
+                    // (package api), pas dans un sous-package impl : convention MapStruct.
+                    .and().haveNameNotMatching(".*MapperImpl")
+                    .should().resideInAPackage("..impl");
+
+    @ArchTest
+    static final ArchRule les_interfaces_ne_sont_pas_dans_un_package_impl =
+            noClasses().that().areInterfaces()
+                    .should().resideInAPackage("..impl");
 }
